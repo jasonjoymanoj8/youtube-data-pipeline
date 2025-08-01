@@ -23,11 +23,39 @@ We expose three Glue databases in Athena:
 | `db_youtube_analytics`          | Final, enriched analytics tables ready for BI tools and dashboards       |
 
 ---
-
 ## 3. Common Queries
 
 ### 3.1 Preview the reference lookup table
 ```sql
+SELECT *
+FROM "AwsDataCatalog"."db_youtube_cleaned"."cleaned_statistics_reference_data"
+LIMIT 10;
+
+-- 3.2 Filter raw facts by region
+SELECT *
+FROM "AwsDataCatalog"."dataengineering-youtube-raw"."raw_statistics"
+WHERE region = 'ca';
+
+-- 3.3 Join raw facts to lookup for US videos
+SELECT
+  a.video_id,
+  a.title,
+  b.snippet_title AS category_name,
+  a.views,
+  a.likes
+FROM "AwsDataCatalog"."dataengineering-youtube-raw"."raw_statistics" AS a
+JOIN "AwsDataCatalog"."db_youtube_cleaned"."cleaned_statistics_reference_data" AS b
+  ON a.category_id = b.id
+WHERE a.region = 'us';
+
+-- 3.4 (Re)create the analytics database
+CREATE DATABASE IF NOT EXISTS db_youtube_analytics;
+
+-- 3.5 Query the final analytics table
+SELECT *
+FROM "AwsDataCatalog"."db_youtube_analytics"."final_analytics"
+LIMIT 100;
+
 SELECT *
 FROM "AwsDataCatalog"."db_youtube_cleaned"."cleaned_statistics_reference_data"
 LIMIT 10;
